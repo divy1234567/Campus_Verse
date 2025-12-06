@@ -89,6 +89,39 @@ const ClubDetailScreen = ({ route, navigation }) => {
       </View>
 
       <View style={styles.content}>
+        {user?.role === 'admin' && (
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={() => {
+              Alert.alert(
+                'Delete Club',
+                'Are you sure you want to delete this club? This action cannot be undone.',
+                [
+                  { text: 'Cancel', style: 'cancel' },
+                  {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: async () => {
+                      try {
+                        const response = await clubService.deleteClub(clubId);
+                        if (response.success) {
+                          Alert.alert('Success', 'Club deleted successfully');
+                          navigation.goBack();
+                        }
+                      } catch (error) {
+                        Alert.alert('Error', 'Failed to delete club');
+                      }
+                    },
+                  },
+                ]
+              );
+            }}
+          >
+            <Ionicons name="trash-outline" size={20} color="#fff" />
+            <Text style={styles.deleteButtonText}>Delete Club</Text>
+          </TouchableOpacity>
+        )}
+
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>About Us</Text>
           <Text style={styles.description}>{club.description}</Text>
@@ -218,6 +251,26 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     fontSize: 16,
     color: config.colors.textSecondary,
+  },
+  deleteButton: {
+    flexDirection: 'row',
+    backgroundColor: config.colors.error,
+    padding: 16,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 24,
+    shadowColor: config.colors.error,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  deleteButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 8,
   },
 });
 

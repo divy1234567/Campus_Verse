@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthContext } from '../context/AuthContext';
 import clubService from '../services/clubService';
@@ -40,29 +41,65 @@ const ClubsScreen = ({ navigation }) => {
     }
   };
 
-  const renderClubCard = ({ item }) => (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={() => navigation.navigate('ClubDetail', { clubId: item._id })}
-    >
-      <View style={styles.cardIcon}>
-        <Ionicons name="people" size={32} color="#fff" />
-      </View>
-      <View style={styles.cardContent}>
-        <Text style={styles.cardTitle}>{item.name}</Text>
-        <Text style={styles.cardCategory}>{item.category}</Text>
-        <Text style={styles.cardDescription} numberOfLines={2}>
-          {item.description}
-        </Text>
+  const getCategoryColor = (category) => {
+    const colors = {
+      'Academic': [config.colors.primary, config.colors.primaryDark],
+      'Sports': [config.colors.accent, config.colors.accentLight],
+      'Cultural': [config.colors.secondary, config.colors.secondaryDark],
+      'Technical': [config.colors.gradientEnd, '#9333EA'],
+      'Social': ['#EC4899', '#F472B6'],
+      'Other': ['#6366F1', '#818CF8'],
+    };
+    return colors[category] || [config.colors.primary, config.colors.primaryDark];
+  };
 
-      </View>
-      <Ionicons name="chevron-forward" size={24} color={config.colors.border} />
-    </TouchableOpacity>
-  );
+  const renderClubCard = ({ item }) => {
+    const gradientColors = getCategoryColor(item.category);
+    return (
+      <TouchableOpacity
+        onPress={() => navigation.navigate('ClubDetail', { clubId: item._id })}
+        activeOpacity={0.9}
+      >
+        <LinearGradient
+          colors={[gradientColors[0] + '15', gradientColors[1] + '08']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.card}
+        >
+          <LinearGradient
+            colors={gradientColors}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.cardIcon}
+          >
+            <Ionicons name="people" size={32} color="#fff" />
+          </LinearGradient>
+          <View style={styles.cardContent}>
+            <Text style={styles.cardTitle}>{item.name}</Text>
+            <Text style={[styles.cardCategory, { color: gradientColors[0] }]}>{item.category}</Text>
+            <Text style={styles.cardDescription} numberOfLines={2}>
+              {item.description}
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={24} color={gradientColors[0]} />
+        </LinearGradient>
+      </TouchableOpacity>
+    );
+  };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.categoryContainer}>
+    <LinearGradient
+      colors={[config.colors.background, config.colors.backgroundGradient, '#F0F9FF']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.container}
+    >
+      <LinearGradient
+        colors={['#FFFFFF', '#F8FAFF']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.categoryContainer}
+      >
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryList}>
           {CATEGORIES.map((category) => (
             <TouchableOpacity
@@ -84,15 +121,22 @@ const ClubsScreen = ({ navigation }) => {
             </TouchableOpacity>
           ))}
         </ScrollView>
-      </View>
+      </LinearGradient>
 
       {user?.role === 'admin' && (
         <TouchableOpacity
-          style={styles.createButton}
           onPress={() => navigation.navigate('CreateClub')}
+          activeOpacity={0.9}
         >
-          <Ionicons name="add-circle" size={24} color="#fff" />
-          <Text style={styles.createButtonText}>Create Club</Text>
+          <LinearGradient
+            colors={[config.colors.primary, config.colors.gradientEnd]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.createButton}
+          >
+            <Ionicons name="add-circle" size={26} color="#fff" />
+            <Text style={styles.createButtonText}>Create Club</Text>
+          </LinearGradient>
         </TouchableOpacity>
       )}
 
@@ -113,14 +157,13 @@ const ClubsScreen = ({ navigation }) => {
           }
         />
       )}
-    </View>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: config.colors.background,
   },
   centerContainer: {
     flex: 1,
@@ -128,33 +171,43 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   categoryContainer: {
-    backgroundColor: config.colors.card,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: config.colors.border,
+    paddingVertical: 20,
+    borderBottomWidth: 0,
+    shadowColor: config.colors.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 4,
   },
   categoryList: {
     paddingHorizontal: 16,
   },
   categoryChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: config.colors.background,
-    marginRight: 8,
-    borderWidth: 1,
-    borderColor: config.colors.border,
+    paddingHorizontal: 22,
+    paddingVertical: 12,
+    borderRadius: 26,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    marginRight: 10,
+    borderWidth: 2,
+    borderColor: 'rgba(37, 99, 235, 0.2)',
   },
   categoryChipActive: {
     backgroundColor: config.colors.primary,
     borderColor: config.colors.primary,
+    shadowColor: config.colors.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 6,
   },
   categoryText: {
     color: config.colors.textSecondary,
-    fontWeight: '600',
+    fontWeight: '700',
+    fontSize: 14,
   },
   categoryTextActive: {
     color: '#fff',
+    fontWeight: '800',
   },
   listContent: {
     padding: 16,
@@ -162,46 +215,54 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: config.colors.card,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
+    borderRadius: 24,
+    padding: 20,
+    marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 6,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.5)',
   },
   cardIcon: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: config.colors.primary,
+    width: 70,
+    height: 70,
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: 18,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
   },
   cardContent: {
     flex: 1,
     marginRight: 8,
   },
   cardTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 19,
+    fontWeight: '800',
     color: config.colors.text,
-    marginBottom: 4,
+    marginBottom: 6,
+    letterSpacing: -0.3,
   },
   cardCategory: {
     fontSize: 12,
     color: config.colors.primary,
-    fontWeight: '600',
-    marginBottom: 4,
+    fontWeight: '700',
+    marginBottom: 6,
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   cardDescription: {
     fontSize: 14,
     color: config.colors.textSecondary,
     marginBottom: 8,
+    lineHeight: 20,
   },
   statsRow: {
     flexDirection: 'row',
@@ -224,23 +285,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: config.colors.primary,
     marginHorizontal: 16,
     marginBottom: 16,
-    marginTop: 16,
-    padding: 14,
-    borderRadius: 12,
+    marginTop: 20,
+    padding: 18,
+    borderRadius: 20,
     shadowColor: config.colors.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 16,
+    elevation: 8,
+    overflow: 'hidden',
   },
   createButtonText: {
     color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginLeft: 8,
+    fontSize: 17,
+    fontWeight: '800',
+    marginLeft: 10,
+    letterSpacing: 0.5,
   },
 });
 

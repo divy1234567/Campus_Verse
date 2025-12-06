@@ -2,17 +2,25 @@ import React, { useState, useContext } from 'react';
 import {
   View,
   Text,
-  TextInput,
-  TouchableOpacity,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   Alert,
-  ActivityIndicator,
+  TouchableOpacity,
+  Image,
+  Dimensions
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { AuthContext } from '../context/AuthContext';
 import config from '../config';
+import ScreenWrapper from '../components/ScreenWrapper';
+import Input from '../components/Input';
+import Button from '../components/Button';
+import Card from '../components/Card';
+
+const { width } = Dimensions.get('window');
 
 const SignInScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -36,146 +44,192 @@ const SignInScreen = ({ navigation }) => {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Campus Verse</Text>
-          <Text style={styles.subtitle}>Welcome back!</Text>
-        </View>
+    <ScreenWrapper backgroundType="gradient">
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.container}
+      >
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.header}>
+            <View style={styles.logoContainer}>
+              <LinearGradient
+                colors={[config.colors.primary, config.colors.gradientEnd]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.logoGradient}
+              >
+                <Ionicons name="school" size={48} color="#FFFFFF" />
+              </LinearGradient>
+            </View>
+            <Text style={styles.title}>Welcome Back!</Text>
+            <Text style={styles.subtitle}>Sign in to continue your campus journey</Text>
+          </View>
 
-        <View style={styles.form}>
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="your.email@campus.edu"
+          <Card style={styles.formCard} variant="elevated">
+            <Input
+              label="Email Address"
+              placeholder="student@university.edu"
               value={email}
               onChangeText={setEmail}
               autoCapitalize="none"
               keyboardType="email-address"
-              autoComplete="email"
-              placeholderTextColor={config.colors.textSecondary}
+              icon="mail-outline"
             />
-          </View>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Password</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your password"
+            <Input
+              label="Password"
+              placeholder="••••••••"
               value={password}
               onChangeText={setPassword}
               secureTextEntry
-              autoComplete="password"
-              placeholderTextColor={config.colors.textSecondary}
+              icon="lock-closed-outline"
             />
+
+            <TouchableOpacity style={styles.forgotPassword}>
+              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+            </TouchableOpacity>
+
+            <Button
+              title="Sign In"
+              onPress={handleSignIn}
+              loading={isLoading}
+              style={styles.signInButton}
+            />
+
+
+          </Card>
+
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>Don't have an account? </Text>
+            <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
+              <Text style={styles.signUpText}>Sign Up</Text>
+            </TouchableOpacity>
           </View>
-
-          <TouchableOpacity
-            style={[styles.button, isLoading && styles.buttonDisabled]}
-            onPress={handleSignIn}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.buttonText}>Sign In</Text>
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.linkButton}
-            onPress={() => navigation.navigate('SignUp')}
-          >
-            <Text style={styles.linkText}>
-              Don't have an account? <Text style={styles.linkTextBold}>Sign Up</Text>
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </ScreenWrapper>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: config.colors.background,
   },
   scrollContent: {
     flexGrow: 1,
+    padding: 24,
     justifyContent: 'center',
-    padding: 20,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 32,
+    marginTop: 20,
+  },
+  logoContainer: {
+    marginBottom: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoGradient: {
+    width: 100,
+    height: 100,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: config.colors.primary,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.4,
+    shadowRadius: 20,
+    elevation: 12,
+  },
+  logoText: {
+    fontSize: 42,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: 2,
   },
   title: {
     fontSize: 36,
-    fontWeight: 'bold',
-    color: config.colors.primary,
-    marginBottom: 10,
-  },
-  subtitle: {
-    fontSize: 18,
-    color: config.colors.textSecondary,
-  },
-  form: {
-    width: '100%',
-  },
-  inputContainer: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '900',
     color: config.colors.text,
     marginBottom: 8,
+    textAlign: 'center',
+    letterSpacing: -0.5,
   },
-  input: {
-    backgroundColor: config.colors.card,
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: config.colors.border,
-    color: config.colors.text,
-  },
-  button: {
-    backgroundColor: config.colors.primary,
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    marginTop: 10,
-    shadowColor: config.colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  linkButton: {
-    marginTop: 20,
-    alignItems: 'center',
-  },
-  linkText: {
+  subtitle: {
     fontSize: 16,
     color: config.colors.textSecondary,
+    textAlign: 'center',
+    maxWidth: '85%',
+    lineHeight: 22,
+    fontWeight: '500',
   },
-  linkTextBold: {
+  formCard: {
+    padding: 28,
+    borderRadius: 32,
+    backgroundColor: config.colors.surface,
+    shadowColor: config.colors.shadow,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 24,
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: config.colors.borderLight,
+  },
+  forgotPassword: {
+    alignSelf: 'flex-end',
+    marginBottom: 24,
+  },
+  forgotPasswordText: {
     color: config.colors.primary,
-    fontWeight: 'bold',
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  signInButton: {
+    marginBottom: 24,
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: config.colors.border,
+  },
+  dividerText: {
+    marginHorizontal: 16,
+    color: config.colors.textLight,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  socialButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  socialButton: {
+    flex: 1,
+    marginVertical: 0,
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 32,
+    marginBottom: 20,
+  },
+  footerText: {
+    color: config.colors.textSecondary,
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  signUpText: {
+    color: config.colors.primary,
+    fontSize: 16,
+    fontWeight: '800',
   },
 });
 

@@ -20,6 +20,9 @@ import QRScannerScreen from '../screens/QRScannerScreen';
 import CreateEventScreen from '../screens/CreateEventScreen';
 import CreateClubScreen from '../screens/CreateClubScreen';
 import MyEventsScreen from '../screens/MyEventsScreen';
+import RemindersScreen from '../screens/RemindersScreen';
+import AnnouncementsScreen from '../screens/AnnouncementsScreen';
+import NotificationsScreen from '../screens/NotificationsScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -38,7 +41,7 @@ const MainTabs = () => {
             iconName = focused ? 'calendar' : 'calendar-outline';
           } else if (route.name === 'ClubsTab') {
             iconName = focused ? 'people' : 'people-outline';
-          } else if (route.name === 'ProfileTab') {
+          } else           if (route.name === 'ProfileTab') {
             iconName = focused ? 'person' : 'person-outline';
           } else if (route.name === 'MyEventsTab') {
             iconName = focused ? 'bookmark' : 'bookmark-outline';
@@ -47,19 +50,36 @@ const MainTabs = () => {
           return <Ionicons name={iconName} size={size} color={color} />;
         },
         tabBarActiveTintColor: config.colors.primary,
-        tabBarInactiveTintColor: config.colors.textSecondary,
+        tabBarInactiveTintColor: config.colors.textLight,
         tabBarStyle: {
-          backgroundColor: config.colors.card,
-          borderTopColor: config.colors.border,
-          paddingBottom: 5,
-          height: 60,
+          backgroundColor: config.colors.surface,
+          borderTopColor: config.colors.borderLight,
+          borderTopWidth: 1,
+          paddingBottom: 8,
+          paddingTop: 8,
+          height: 65,
+          shadowColor: config.colors.shadow,
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 8,
+          elevation: 8,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '700',
+          marginTop: 2,
         },
         headerStyle: {
           backgroundColor: config.colors.primary,
+          elevation: 0,
+          shadowOpacity: 0,
+          borderBottomWidth: 0,
         },
         headerTintColor: '#fff',
         headerTitleStyle: {
-          fontWeight: 'bold',
+          fontWeight: '900',
+          fontSize: 20,
+          letterSpacing: -0.3,
         },
       })}
     >
@@ -110,10 +130,15 @@ const EventsStack = () => {
       screenOptions={{
         headerStyle: {
           backgroundColor: config.colors.primary,
+          elevation: 0,
+          shadowOpacity: 0,
+          borderBottomWidth: 0,
         },
         headerTintColor: '#fff',
         headerTitleStyle: {
-          fontWeight: 'bold',
+          fontWeight: '900',
+          fontSize: 20,
+          letterSpacing: -0.3,
         },
       }}
     >
@@ -152,10 +177,15 @@ const ClubsStack = () => {
       screenOptions={{
         headerStyle: {
           backgroundColor: config.colors.primary,
+          elevation: 0,
+          shadowOpacity: 0,
+          borderBottomWidth: 0,
         },
         headerTintColor: '#fff',
         headerTitleStyle: {
-          fontWeight: 'bold',
+          fontWeight: '900',
+          fontSize: 20,
+          letterSpacing: -0.3,
         },
       }}
     >
@@ -187,10 +217,15 @@ const MyEventsStack = () => {
       screenOptions={{
         headerStyle: {
           backgroundColor: config.colors.primary,
+          elevation: 0,
+          shadowOpacity: 0,
+          borderBottomWidth: 0,
         },
         headerTintColor: '#fff',
         headerTitleStyle: {
-          fontWeight: 'bold',
+          fontWeight: '900',
+          fontSize: 20,
+          letterSpacing: -0.3,
         },
       }}
     >
@@ -220,10 +255,15 @@ const ProfileStack = () => {
       screenOptions={{
         headerStyle: {
           backgroundColor: config.colors.primary,
+          elevation: 0,
+          shadowOpacity: 0,
+          borderBottomWidth: 0,
         },
         headerTintColor: '#fff',
         headerTitleStyle: {
-          fontWeight: 'bold',
+          fontWeight: '900',
+          fontSize: 20,
+          letterSpacing: -0.3,
         },
       }}
     >
@@ -231,6 +271,21 @@ const ProfileStack = () => {
         name="Profile" 
         component={ProfileScreen} 
         options={{ title: 'My Profile' }} 
+      />
+      <Stack.Screen 
+        name="Reminders" 
+        component={RemindersScreen} 
+        options={{ title: 'My Reminders' }} 
+      />
+      <Stack.Screen 
+        name="Announcements" 
+        component={AnnouncementsScreen} 
+        options={{ title: 'Announcements' }} 
+      />
+      <Stack.Screen 
+        name="Notifications" 
+        component={NotificationsScreen} 
+        options={{ title: 'Notifications' }} 
       />
     </Stack.Navigator>
   );

@@ -2,18 +2,22 @@ import React, { useState, useContext } from 'react';
 import {
   View,
   Text,
-  TextInput,
-  TouchableOpacity,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   Alert,
-  ActivityIndicator,
+  TouchableOpacity,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Picker } from '@react-native-picker/picker';
 import { AuthContext } from '../context/AuthContext';
 import config from '../config';
+import ScreenWrapper from '../components/ScreenWrapper';
+import Input from '../components/Input';
+import Button from '../components/Button';
+import Card from '../components/Card';
+import { Ionicons } from '@expo/vector-icons';
 
 const SignUpScreen = ({ navigation }) => {
   const [formData, setFormData] = useState({
@@ -58,195 +62,244 @@ const SignUpScreen = ({ navigation }) => {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>Join Campus Verse today!</Text>
-        </View>
+    <ScreenWrapper backgroundType="gradient">
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.container}
+      >
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.header}>
+            <TouchableOpacity 
+              onPress={() => navigation.goBack()} 
+              style={styles.backButton}
+            >
+              <LinearGradient
+                colors={[config.colors.primary + '15', config.colors.primary + '08']}
+                style={styles.backButtonGradient}
+              >
+                <Ionicons name="arrow-back" size={22} color={config.colors.primary} />
+              </LinearGradient>
+            </TouchableOpacity>
+            <View style={styles.headerTextContainer}>
+              <View style={styles.logoContainer}>
+                <LinearGradient
+                  colors={[config.colors.primary, config.colors.gradientEnd]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.logoGradient}
+                >
+                  <Ionicons name="person-add" size={32} color="#FFFFFF" />
+                </LinearGradient>
+              </View>
+              <Text style={styles.title}>Create Account</Text>
+              <Text style={styles.subtitle}>Join Campus Verse today!</Text>
+            </View>
+          </View>
 
-        <View style={styles.form}>
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Full Name</Text>
-            <TextInput
-              style={styles.input}
+          <Card style={styles.formCard} variant="elevated">
+            <Input
+              label="Full Name"
               placeholder="John Doe"
               value={formData.name}
               onChangeText={(value) => updateFormData('name', value)}
               autoComplete="name"
-              placeholderTextColor={config.colors.textSecondary}
+              icon="person-outline"
             />
-          </View>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="your.email@campus.edu"
+            <Input
+              label="Email Address"
+              placeholder="student@university.edu"
               value={formData.email}
               onChangeText={(value) => updateFormData('email', value)}
               autoCapitalize="none"
               keyboardType="email-address"
-              autoComplete="email"
-              placeholderTextColor={config.colors.textSecondary}
+              icon="mail-outline"
             />
-          </View>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Password</Text>
-            <TextInput
-              style={styles.input}
+            <Input
+              label="Password"
               placeholder="At least 6 characters"
               value={formData.password}
               onChangeText={(value) => updateFormData('password', value)}
               secureTextEntry
-              autoComplete="password-new"
-              placeholderTextColor={config.colors.textSecondary}
+              icon="lock-closed-outline"
             />
-          </View>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Confirm Password</Text>
-            <TextInput
-              style={styles.input}
+            <Input
+              label="Confirm Password"
               placeholder="Re-enter your password"
               value={formData.confirmPassword}
               onChangeText={(value) => updateFormData('confirmPassword', value)}
               secureTextEntry
-              autoComplete="password-new"
-              placeholderTextColor={config.colors.textSecondary}
+              icon="lock-closed-outline"
             />
-          </View>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Role</Text>
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={formData.role}
-                onValueChange={(value) => updateFormData('role', value)}
-                style={styles.picker}
-              >
-                <Picker.Item label="Student" value="student" />
-                <Picker.Item label="Admin" value="admin" />
-              </Picker>
+            <View style={styles.pickerWrapper}>
+              <Text style={styles.label}>I am a...</Text>
+              <View style={styles.pickerContainer}>
+                <View style={styles.pickerIcon}>
+                  <Ionicons name="school-outline" size={20} color={config.colors.textLight} />
+                </View>
+                <Picker
+                  selectedValue={formData.role}
+                  onValueChange={(value) => updateFormData('role', value)}
+                  style={styles.picker}
+                  dropdownIconColor={config.colors.primary}
+                >
+                  <Picker.Item label="Student" value="student" style={styles.pickerItem} />
+                  <Picker.Item label="Admin" value="admin" style={styles.pickerItem} />
+                </Picker>
+              </View>
             </View>
-          </View>
 
-          <TouchableOpacity
-            style={[styles.button, isLoading && styles.buttonDisabled]}
-            onPress={handleSignUp}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.buttonText}>Sign Up</Text>
-            )}
-          </TouchableOpacity>
+            <Button
+              title="Sign Up"
+              onPress={handleSignUp}
+              loading={isLoading}
+              style={styles.signUpButton}
+            />
 
-          <TouchableOpacity
-            style={styles.linkButton}
-            onPress={() => navigation.navigate('SignIn')}
-          >
-            <Text style={styles.linkText}>
-              Already have an account? <Text style={styles.linkTextBold}>Sign In</Text>
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+            <View style={styles.footer}>
+              <Text style={styles.footerText}>Already have an account? </Text>
+              <TouchableOpacity onPress={() => navigation.navigate('SignIn')}>
+                <Text style={styles.signInText}>Sign In</Text>
+              </TouchableOpacity>
+            </View>
+          </Card>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </ScreenWrapper>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: config.colors.background,
   },
   scrollContent: {
     flexGrow: 1,
+    padding: 24,
     justifyContent: 'center',
-    padding: 20,
   },
   header: {
+    marginBottom: 32,
+    marginTop: 20,
+  },
+  backButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    marginBottom: 24,
+    overflow: 'hidden',
+  },
+  backButtonGradient: {
+    width: '100%',
+    height: '100%',
     alignItems: 'center',
-    marginBottom: 30,
+    justifyContent: 'center',
+  },
+  headerTextContainer: {
+    alignItems: 'center',
+  },
+  logoContainer: {
+    marginBottom: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoGradient: {
+    width: 80,
+    height: 80,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: config.colors.primary,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 8,
   },
   title: {
     fontSize: 36,
-    fontWeight: 'bold',
-    color: config.colors.primary,
-    marginBottom: 10,
+    fontWeight: '900',
+    color: config.colors.text,
+    marginBottom: 8,
+    textAlign: 'center',
+    letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 18,
+    fontSize: 16,
     color: config.colors.textSecondary,
+    textAlign: 'center',
+    fontWeight: '500',
+    lineHeight: 22,
   },
-  form: {
-    width: '100%',
+  formCard: {
+    padding: 28,
+    borderRadius: 32,
+    backgroundColor: config.colors.surface,
+    shadowColor: config.colors.shadow,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 24,
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: config.colors.borderLight,
   },
-  inputContainer: {
-    marginBottom: 18,
+  pickerWrapper: {
+    marginBottom: 24,
   },
   label: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: config.colors.text,
     marginBottom: 8,
-  },
-  input: {
-    backgroundColor: config.colors.card,
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: config.colors.border,
-    color: config.colors.text,
+    marginLeft: 4,
   },
   pickerContainer: {
-    backgroundColor: config.colors.card,
-    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: config.colors.surface,
+    borderRadius: config.borderRadius.m,
     borderWidth: 1,
-    borderColor: config.colors.border,
-    overflow: 'hidden',
+    borderColor: 'transparent',
+    height: 56,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  pickerIcon: {
+    marginLeft: 16,
   },
   picker: {
-    height: 50,
+    flex: 1,
+    marginLeft: 8,
   },
-  button: {
-    backgroundColor: config.colors.primary,
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    marginTop: 10,
-    shadowColor: config.colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  linkButton: {
-    marginTop: 20,
-    alignItems: 'center',
-  },
-  linkText: {
+  pickerItem: {
     fontSize: 16,
-    color: config.colors.textSecondary,
+    color: config.colors.text,
   },
-  linkTextBold: {
+  signUpButton: {
+    marginTop: 8,
+    marginBottom: 24,
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  footerText: {
+    color: config.colors.textSecondary,
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  signInText: {
     color: config.colors.primary,
-    fontWeight: 'bold',
+    fontSize: 16,
+    fontWeight: '800',
   },
 });
 

@@ -31,7 +31,15 @@ api.interceptors.response.use(
   (error) => {
     if (error.response) {
       // Server responded with error
-      console.error('API Error:', error.response.data);
+      const errorMessage = error.response.data?.message || 'An error occurred';
+      console.error('API Error:', errorMessage);
+      
+      // Optional: Handle 401 Unauthorized globally
+      if (error.response.status === 401) {
+        // You might want to trigger a logout action here
+        // For now, we just log it clearly
+        console.log('Authentication failed - Token may be expired');
+      }
     } else if (error.request) {
       // Request made but no response
       console.error('Network Error:', error.message);

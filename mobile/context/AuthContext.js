@@ -1,6 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Notifications from 'expo-notifications';
 import authService from '../services/authService';
 
 export const AuthContext = createContext();
@@ -42,9 +41,6 @@ export const AuthProvider = ({ children }) => {
         
         setToken(token);
         setUser(user);
-
-        // Register for push notifications
-        await registerForPushNotifications(token);
         
         return { success: true };
       } else {
@@ -67,9 +63,6 @@ export const AuthProvider = ({ children }) => {
         
         setToken(token);
         setUser(user);
-
-        // Register for push notifications
-        await registerForPushNotifications(token);
         
         return { success: true };
       } else {
@@ -89,30 +82,6 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
     } catch (error) {
       console.error('Sign out error:', error);
-    }
-  };
-
-  const registerForPushNotifications = async (authToken) => {
-    try {
-      const { status: existingStatus } = await Notifications.getPermissionsAsync();
-      let finalStatus = existingStatus;
-
-      if (existingStatus !== 'granted') {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-      }
-
-      if (finalStatus !== 'granted') {
-        console.log('Push notification permission not granted');
-        return;
-      }
-
-      const tokenData = await Notifications.getExpoPushTokenAsync();
-      
-      // Send token to backend
-      await authService.saveExpoPushToken(tokenData.data, authToken);
-    } catch (error) {
-      console.error('Error registering for push notifications:', error);
     }
   };
 
