@@ -6,6 +6,7 @@ const User = require('../models/User');
 const RSVP = require('../models/RSVP');
 const { authMiddleware, adminMiddleware } = require('../middleware/authMiddleware');
 const { sendNewEventNotification } = require('../services/notificationService');
+const Notification = require('../models/Notification');
 
 /**
  * @route   GET /api/events
@@ -131,25 +132,36 @@ router.post('/', authMiddleware, adminMiddleware, async (req, res) => {
     await event.populate('clubId', 'name logoUrl');
     await event.populate('createdBy', 'name email');
 
-    // Send notifications to club followers if this event is associated with a club
+    // Send notifications
     if (clubId) {
+      // Club-specific event: Notify followers
       try {
         const followers = await User.find({ 
-          followedClubs: clubId,
-          expoPushToken: { $ne: null }
+          followedClubs: clubId
         });
         
         if (followers.length > 0) {
-          const tokens = followers.map(f => f.expoPushToken);
+          const followerIds = followers.map(f => f._id);
           const club = await require('../models/Club').findById(clubId);
           
           if (club) {
-            await sendNewEventNotification(tokens, event, club.name);
+            await sendNewEventNotification(followerIds, event, club.name);
           }
         }
       } catch (notifError) {
-        console.error('Error sending notifications:', notifError);
-        // Don't fail the request if notification fails
+        console.error('Error sending club notifications:', notifError);
+      }
+    } else {
+      // General event: Notify all students
+      try {
+        const students = await User.find({ role: 'student' });
+        
+        if (students.length > 0) {
+          const studentIds = students.map(s => s._id);
+          await sendNewEventNotification(studentIds, event, 'Campus Verse');
+        }
+      } catch (notifError) {
+        console.error('Error sending general notifications:', notifError);
       }
     }
 
@@ -212,15 +224,13 @@ router.put('/:id', authMiddleware, adminMiddleware, async (req, res) => {
         const rsvps = await RSVP.find({ 
           eventId: req.params.id, 
           status: 'attending' 
-        }).populate('userId');
+        });
         
-        const tokens = rsvps
-          .map(rsvp => rsvp.userId.expoPushToken)
-          .filter(token => token);
+        const userIds = rsvps.map(rsvp => rsvp.userId);
         
-        if (tokens.length > 0) {
+        if (userIds.length > 0) {
           const { sendEventUpdate } = require('../services/notificationService');
-          await sendEventUpdate(tokens, event, changes[0]);
+          await sendEventUpdate(userIds, event, changes[0]);
         }
       } catch (notifError) {
         console.error('Error sending update notifications:', notifError);
@@ -263,15 +273,13 @@ router.delete('/:id', authMiddleware, adminMiddleware, async (req, res) => {
       const rsvps = await RSVP.find({ 
         eventId: req.params.id, 
         status: 'attending' 
-      }).populate('userId');
+      });
       
-      const tokens = rsvps
-        .map(rsvp => rsvp.userId.expoPushToken)
-        .filter(token => token);
+      const userIds = rsvps.map(rsvp => rsvp.userId);
       
-      if (tokens.length > 0) {
+      if (userIds.length > 0) {
         const { sendEventUpdate } = require('../services/notificationService');
-        await sendEventUpdate(tokens, event, 'cancelled');
+        await sendEventUpdate(userIds, event, 'cancelled');
       }
     } catch (notifError) {
       console.error('Error sending cancellation notifications:', notifError);

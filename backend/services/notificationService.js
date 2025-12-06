@@ -1,92 +1,65 @@
-const { Expo } = require('expo-server-sdk');
-
-// Create a new Expo SDK client
-const expo = new Expo();
+const Notification = require('../models/Notification');
 
 /**
- * Send push notification to a single user
- * @param {String} expoPushToken - User's Expo push token
+ * Create and save a notification for a user
+ * @param {String} userId - User ID
  * @param {String} title - Notification title
  * @param {String} body - Notification body
- * @param {Object} data - Additional data to send with notification
+ * @param {String} type - Notification type
+ * @param {Object} data - Additional data
  */
-const sendPushNotification = async (expoPushToken, title, body, data = {}) => {
-  // Check that the token is valid
-  if (!Expo.isExpoPushToken(expoPushToken)) {
-    console.error(`Push token ${expoPushToken} is not a valid Expo push token`);
-    return { success: false, message: 'Invalid Expo push token' };
-  }
-
-  // Construct the notification message
-  const message = {
-    to: expoPushToken,
-    sound: 'default',
-    title: title,
-    body: body,
-    data: data,
-    priority: 'high'
-  };
-
+const createNotification = async (userId, title, body, type = 'general', data = {}) => {
   try {
-    const ticketChunk = await expo.sendPushNotificationsAsync([message]);
-    console.log('Notification sent:', ticketChunk);
-    return { success: true, ticket: ticketChunk };
+    const notification = new Notification({
+      userId,
+      title,
+      body,
+      type,
+      data
+    });
+
+    await notification.save();
+    console.log(`Notification created for user ${userId}: ${title}`);
+    return { success: true, notification };
   } catch (error) {
-    console.error('Error sending notification:', error);
+    console.error('Error creating notification:', error);
     return { success: false, message: error.message };
   }
 };
 
 /**
- * Send push notifications to multiple users
- * @param {Array} tokens - Array of Expo push tokens
+ * Create notifications for multiple users
+ * @param {Array} userIds - Array of user IDs
  * @param {String} title - Notification title
  * @param {String} body - Notification body
- * @param {Object} data - Additional data to send with notification
+ * @param {String} type - Notification type
+ * @param {Object} data - Additional data
  */
-const sendBulkPushNotifications = async (tokens, title, body, data = {}) => {
-  const messages = [];
-
-  for (let token of tokens) {
-    // Check that the token is valid
-    if (!Expo.isExpoPushToken(token)) {
-      console.error(`Push token ${token} is not a valid Expo push token`);
-      continue;
-    }
-
-    messages.push({
-      to: token,
-      sound: 'default',
-      title: title,
-      body: body,
-      data: data,
-      priority: 'high'
-    });
-  }
-
-  // Send notifications in chunks
-  const chunks = expo.chunkPushNotifications(messages);
-  const tickets = [];
-
+const createBulkNotifications = async (userIds, title, body, type = 'general', data = {}) => {
   try {
-    for (let chunk of chunks) {
-      const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
-      tickets.push(...ticketChunk);
-    }
-    console.log(`Sent ${tickets.length} notifications`);
-    return { success: true, tickets };
+    const notifications = userIds.map(userId => ({
+      userId,
+      title,
+      body,
+      type,
+      data
+    }));
+
+    const result = await Notification.insertMany(notifications);
+    console.log(`Created ${result.length} notifications`);
+    return { success: true, count: result.length };
   } catch (error) {
-    console.error('Error sending bulk notifications:', error);
+    console.error('Error creating bulk notifications:', error);
     return { success: false, message: error.message };
   }
 };
 
 /**
  * Send event reminder notification
- * @param {String} expoPushToken - User's Expo push token
+ * @param {String} userId - User ID
  * @param {Object} event - Event object
  */
-const sendEventReminder = async (expoPushToken, event) => {
+const sendEventReminder = async (userId, event) => {
   const title = `Reminder: ${event.title}`;
   const body = `Event starts at ${event.time} on ${new Date(event.date).toLocaleDateString()}`;
   const data = { 
@@ -94,16 +67,16 @@ const sendEventReminder = async (expoPushToken, event) => {
     eventId: event._id.toString() 
   };
 
-  return await sendPushNotification(expoPushToken, title, body, data);
+  return await createNotification(userId, title, body, 'event_reminder', data);
 };
 
 /**
  * Send event update notification
- * @param {Array} tokens - Array of user Expo push tokens
+ * @param {Array} userIds - Array of user IDs
  * @param {Object} event - Event object
  * @param {String} updateType - Type of update (time_change, venue_change, cancelled, etc.)
  */
-const sendEventUpdate = async (tokens, event, updateType) => {
+const sendEventUpdate = async (userIds, event, updateType) => {
   let title = '';
   let body = '';
 
@@ -131,16 +104,16 @@ const sendEventUpdate = async (tokens, event, updateType) => {
     updateType 
   };
 
-  return await sendBulkPushNotifications(tokens, title, body, data);
+  return await createBulkNotifications(userIds, title, body, 'event_update', data);
 };
 
 /**
  * Send new event notification to club followers
- * @param {Array} tokens - Array of follower Expo push tokens
+ * @param {Array} userIds - Array of user IDs
  * @param {Object} event - Event object
  * @param {String} clubName - Club name
  */
-const sendNewEventNotification = async (tokens, event, clubName) => {
+const sendNewEventNotification = async (userIds, event, clubName) => {
   const title = `New Event from ${clubName}`;
   const body = `${event.title} - ${new Date(event.date).toLocaleDateString()} at ${event.time}`;
   const data = { 
@@ -149,13 +122,30 @@ const sendNewEventNotification = async (tokens, event, clubName) => {
     clubName 
   };
 
-  return await sendBulkPushNotifications(tokens, title, body, data);
+  return await createBulkNotifications(userIds, title, body, 'new_event', data);
+};
+
+/**
+ * Send announcement notification
+ * @param {Array} userIds - Array of user IDs
+ * @param {Object} announcement - Announcement object
+ */
+const sendAnnouncementNotification = async (userIds, announcement) => {
+  const title = announcement.title;
+  const body = announcement.content.substring(0, 100) + (announcement.content.length > 100 ? '...' : '');
+  const data = {
+    type: 'announcement',
+    announcementId: announcement._id.toString()
+  };
+
+  return await createBulkNotifications(userIds, title, body, 'announcement', data);
 };
 
 module.exports = {
-  sendPushNotification,
-  sendBulkPushNotifications,
+  createNotification,
+  createBulkNotifications,
   sendEventReminder,
   sendEventUpdate,
-  sendNewEventNotification
+  sendNewEventNotification,
+  sendAnnouncementNotification
 };

@@ -62,4 +62,7 @@ const adminMiddleware = (req, res, next) => {
   }
 };
 
-module.exports = { authMiddleware, adminMiddleware };
+// Alias for consistency
+const authenticate = authMiddleware;
+
+module.exports = { authMiddleware, adminMiddleware, authenticate };

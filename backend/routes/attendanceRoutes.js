@@ -3,6 +3,7 @@ const router = express.Router();
 const Attendance = require('../models/Attendance');
 const Event = require('../models/Event');
 const { authMiddleware, adminMiddleware } = require('../middleware/authMiddleware');
+const { createNotification } = require('../services/notificationService');
 
 /**
  * @route   POST /api/attendance/checkin
@@ -74,6 +75,20 @@ router.post('/checkin', authMiddleware, async (req, res) => {
     });
 
     await attendance.save();
+
+    // Send attendance confirmation notification
+    try {
+      await createNotification(
+        req.user._id,
+        `Checked In: ${event.title}`,
+        `You've successfully checked in to this event`,
+        'attendance',
+        { eventId: event._id.toString() }
+      );
+    } catch (notifError) {
+      console.error('Error sending attendance notification:', notifError);
+      // Don't fail the request if notification fails
+    }
 
     res.status(201).json({
       success: true,

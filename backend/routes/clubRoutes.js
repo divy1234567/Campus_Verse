@@ -42,7 +42,7 @@ router.get('/', async (req, res) => {
  */
 router.get('/:id', async (req, res) => {
   try {
-    const club = await Club.findById(req.params.id);
+    const club = await Club.findById(req.params.id).populate('members', 'name email');
 
     if (!club) {
       return res.status(404).json({ 
@@ -174,11 +174,21 @@ router.delete('/:id', authMiddleware, adminMiddleware, async (req, res) => {
       });
     }
 
+    // Delete all events associated with this club
+    const Event = require('../models/Event');
+    await Event.deleteMany({ clubId: req.params.id });
+
+    // Remove club from all users' followedClubs
+    await User.updateMany(
+      { followedClubs: req.params.id },
+      { $pull: { followedClubs: req.params.id } }
+    );
+
     await club.deleteOne();
 
     res.json({
       success: true,
-      message: 'Club deleted successfully'
+      message: 'Club and associated events deleted successfully'
     });
   } catch (error) {
     console.error('Delete club error:', error);
@@ -303,6 +313,135 @@ router.get('/my/followed', authMiddleware, async (req, res) => {
     res.status(500).json({ 
       success: false, 
       message: 'Server error fetching followed clubs',
+      error: error.message 
+    });
+  }
+});
+
+/**
+ * @route   POST /api/clubs/:id/join
+ * @desc    Join a club as a member
+ * @access  Private
+ */
+router.post('/:id/join', authMiddleware, async (req, res) => {
+  try {
+    const club = await Club.findById(req.params.id);
+
+    if (!club) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Club not found' 
+      });
+    }
+
+    // Check if already a member
+    if (club.members.includes(req.user._id)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Already a member of this club' 
+      });
+    }
+
+    // Add user to club members
+    club.members.push(req.user._id);
+    club.memberCount = club.members.length;
+    await club.save();
+
+    res.json({
+      success: true,
+      message: 'Successfully joined club',
+      data: { 
+        clubId: req.params.id,
+        clubName: club.name,
+        memberCount: club.memberCount
+      }
+    });
+  } catch (error) {
+    console.error('Join club error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error joining club',
+      error: error.message 
+    });
+  }
+});
+
+/**
+ * @route   POST /api/clubs/:id/leave
+ * @desc    Leave a club
+ * @access  Private
+ */
+router.post('/:id/leave', authMiddleware, async (req, res) => {
+  try {
+    const club = await Club.findById(req.params.id);
+
+    if (!club) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Club not found' 
+      });
+    }
+
+    // Check if not a member
+    if (!club.members.includes(req.user._id)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Not a member of this club' 
+      });
+    }
+
+    // Remove user from club members
+    club.members = club.members.filter(
+      memberId => memberId.toString() !== req.user._id.toString()
+    );
+    club.memberCount = club.members.length;
+    await club.save();
+
+    res.json({
+      success: true,
+      message: 'Successfully left club',
+      data: { 
+        clubId: req.params.id,
+        clubName: club.name,
+        memberCount: club.memberCount
+      }
+    });
+  } catch (error) {
+    console.error('Leave club error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error leaving club',
+      error: error.message 
+    });
+  }
+});
+
+/**
+ * @route   GET /api/clubs/:id/members
+ * @desc    Get club members
+ * @access  Public
+ */
+router.get('/:id/members', async (req, res) => {
+  try {
+    const club = await Club.findById(req.params.id).populate('members', 'name email');
+
+    if (!club) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Club not found' 
+      });
+    }
+
+    res.json({
+      success: true,
+      count: club.members.length,
+      data: { members: club.members }
+    });
+  } catch (error) {
+    console.error('Get club members error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error fetching club members',
       error: error.message 
     });
   }

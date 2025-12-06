@@ -9,6 +9,11 @@ const eventRoutes = require('./routes/eventRoutes');
 const clubRoutes = require('./routes/clubRoutes');
 const rsvpRoutes = require('./routes/rsvpRoutes');
 const attendanceRoutes = require('./routes/attendanceRoutes');
+const commentRoutes = require('./routes/commentRoutes');
+const favoriteRoutes = require('./routes/favoriteRoutes');
+const reminderRoutes = require('./routes/reminderRoutes');
+const announcementRoutes = require('./routes/announcementRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 
 // Initialize Express app
 const app = express();
@@ -47,6 +52,11 @@ app.use('/api/events', eventRoutes);
 app.use('/api/clubs', clubRoutes);
 app.use('/api/rsvp', rsvpRoutes);
 app.use('/api/attendance', attendanceRoutes);
+app.use('/api/comments', commentRoutes);
+app.use('/api/favorites', favoriteRoutes);
+app.use('/api/reminders', reminderRoutes);
+app.use('/api/announcements', announcementRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Root route
 app.get('/', (req, res) => {
@@ -59,7 +69,12 @@ app.get('/', (req, res) => {
       events: '/api/events',
       clubs: '/api/clubs',
       rsvp: '/api/rsvp',
-      attendance: '/api/attendance'
+      attendance: '/api/attendance',
+      comments: '/api/comments',
+      favorites: '/api/favorites',
+      reminders: '/api/reminders',
+      announcements: '/api/announcements',
+      notifications: '/api/notifications'
     }
   });
 });

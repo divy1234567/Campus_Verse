@@ -3,6 +3,7 @@ const router = express.Router();
 const RSVP = require('../models/RSVP');
 const Event = require('../models/Event');
 const { authMiddleware } = require('../middleware/authMiddleware');
+const { createNotification } = require('../services/notificationService');
 
 /**
  * @route   POST /api/rsvp/:eventId
@@ -47,6 +48,20 @@ router.post('/:eventId', authMiddleware, async (req, res) => {
         status: 'attending'
       });
       await rsvp.save();
+    }
+
+    // Send RSVP confirmation notification
+    try {
+      await createNotification(
+        req.user._id,
+        `RSVP Confirmed: ${event.title}`,
+        `You've successfully RSVP'd to this event on ${new Date(event.date).toLocaleDateString()} at ${event.time}`,
+        'rsvp',
+        { eventId: event._id.toString() }
+      );
+    } catch (notifError) {
+      console.error('Error sending RSVP notification:', notifError);
+      // Don't fail the request if notification fails
     }
 
     res.status(201).json({
@@ -94,6 +109,23 @@ router.delete('/:eventId', authMiddleware, async (req, res) => {
 
     rsvp.status = 'cancelled';
     await rsvp.save();
+
+    // Send RSVP cancellation notification
+    try {
+      const event = await Event.findById(eventId);
+      if (event) {
+        await createNotification(
+          req.user._id,
+          `RSVP Cancelled: ${event.title}`,
+          `You've cancelled your RSVP for this event`,
+          'rsvp',
+          { eventId: event._id.toString(), cancelled: true }
+        );
+      }
+    } catch (notifError) {
+      console.error('Error sending cancellation notification:', notifError);
+      // Don't fail the request if notification fails
+    }
 
     res.json({
       success: true,
